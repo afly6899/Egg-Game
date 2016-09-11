@@ -1,0 +1,25 @@
+[Scene A0]
+Elaine:Dang, I can't get out of this valley!
+Mom:A valley?
+Elaine:Yeah. I'm playing this game where you have to use a grappling hook to climb up the side of a valley. See?
+Mom:That looks more like a canyon wall than a valley.
+Elaine:Eh, same difference.
+
+[Scene A1]
+Mom:All right, Elaine! Time for another year at school!
+Elaine:You sound so excited mom. I'm pretty sure I wasn't bothering you that much over the summer!
+Mom:Ahaha, of course you weren't, dear! It's just exciting to see you start your senior year of high school.
+Mom:It felt like just yesterday when we were first enrolling you into this school... but enough with me getting all nostalgic on you. Go on and have a great first day of school!
+Elaine:R-right! Thanks mom!
+ChoiceTrigger:Mom:So are you ready to go?
+[Goto Scene A3]:Yep!
+[Goto Scene A4]:Sure...
+
+[Scene A3]
+Elaine:Yep!
+Mom:Okay! Have a good day, honey!
+
+[Scene A4]
+Elaine:Sure...
+Mom:Don't sound so down! Have a good day, honey!
+

@@ -13,13 +13,12 @@ public class DialogueManager : MonoBehaviour {
     // choiceDisplay (Canvas) -> Canvas UI that holds the Text UI for the choices (is parent to choiceSize)
     // originalFile (TextAsset) -> Text File that contains all the scene information
     public Text nameText;
-    public Text choiceSize;
+    //public Text choiceSize;
     public Text dialogueText;
     public Canvas choiceDisplay;
 	public TextAsset originalFile;
 	
     Dictionary<string, Scene> scenesByName;
-
 
 
     // To initialize all the stuffs
@@ -32,7 +31,7 @@ public class DialogueManager : MonoBehaviour {
         {
             if (scene.Length > 0)
             {
-                Scene newScene = new Scene(scene.TrimEnd().Split('\n'));
+                Scene newScene = new Scene(scene.TrimEnd().Split('\n'), ref choiceDisplay);
                 scenesByName[newScene.sceneName] = newScene;
             }
         }
@@ -41,7 +40,10 @@ public class DialogueManager : MonoBehaviour {
     // Will update the system every cycle!
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
 
+        }
     }
 }
 
@@ -72,68 +74,81 @@ class Scene
     bool hasChoices;
     public string sceneName; // may remove public and have a getName function instead... we'll have to see
     string[] choiceText;
-    List<string[]> dialogueText;
+    List<string[]> dialogueText; // holding a list of [Name, Dialogue]
+    List<string> choices; // TEMP!
     List<GameObject> choiceOptions;
+    List<string> goToSceneNames;
 
     Text choiceSize;
     Canvas choiceDisplay;
     private string[] v;
 
     // Scene(): constructor for Scene that takes in the array of text for a scene, does all the parsing!
-    public Scene (string[] sceneText)
+    public Scene (string[] sceneText, ref Canvas optionDisplay)
     {
-        for (int i=0; i<sceneText.Length; i++) { Debug.Log(sceneText[i]); }
+        // Initializing all variables
+        numChoices = 0;
+        hasChoices = false;
+        dialogueText = new List<string[]>();
+        choices = new List<string>();
+        choiceOptions = new List<GameObject>();
+        goToSceneNames = new List<string>();
+        
+
 
         sceneName = sceneText[0].Substring(0, 2); // "[Scene " goes up to index 6, so name should start at 7 -> now has reformatted to just be __], so start at 0
-        //string[] parsedLine;
-        //List<string> goToSceneNames = new List<string>();
-        //for (int i=1; i<sceneText.Length; i++)
-        //{
-        //    parsedLine = sceneText[i].Split(':');
-        //    if (parsedLine[0][0] == '[') // could either be a choice option or just a goto statement
-        //    {
-        //        // parsedLine[0] = [Goto Scene __] -> Split by ' ' = [ [Goto, Scene, __] ] -> [2] = __] -> Substring(0,2) = __
-        //        goToSceneNames.Add(parsedLine[0].Split(' ')[2].Substring(0,2));
+        Debug.Log(sceneName);
 
-        //        if (parsedLine.Length == 2) // is a choice option cause it has Answer in it
-        //        {
-        //            // parsedLine = [[Goto Scene __], Answer]
-        //            AddTextToMenu(parsedLine[1]);
-        //        }
-        //    }
-        //    else if (parsedLine.Length == 3) // will be 3 if ChoiceTrigger!
-        //    {
-        //        // parsedLine = [ ChoiceTrigger, Name, Question ] -> only want Name and Question
-        //        hasChoices = true;
-        //        choiceText = new string[2];
-        //        choiceText[0] = parsedLine[1];
-        //        choiceText[1] = parsedLine[2];
-        //    }
-        //    else
-        //    {
-        //        dialogueText.Add(parsedLine);
-        //    }
-        //}
-        //if (goToSceneNames.Count == 1) // if there were no choices... then the only node to go to is the next?
-        //{
-        //    hasChoices = false;
-        //}
+        string[] parsedLine;
+        for (int i=1; i<sceneText.Length; i++)
+        {
+            parsedLine = sceneText[i].Split(':');
+
+            // first: has [Goto Scene A1] condition
+            if (parsedLine[0][0] == '[') // could either be a choice option or just a goto statement
+            {
+                //Debug.Log("Could be choice or goto statement: " + parsedLine.Length);
+                // parsedLine[0] = [Goto Scene __] -> Split by ' ' = [ [Goto, Scene, __] ] -> [2] = __] -> Substring(0,2) = __
+                // save the scene name in the goToSceneNames list
+                goToSceneNames.Add(parsedLine[0].Split(' ')[2].Substring(0,2));
+                // if there's a choice afterwards, save it as well
+                if (parsedLine.Length == 2) // is a choice option cause it has Answer in it
+                {
+                    // parsedLine = [[Goto Scene __], Answer]
+                    // TEMP {
+                    choices.Add(parsedLine[1]);
+                    // }
+                    AddTextToMenu(parsedLine[1], ref optionDisplay);
+                }
+            }
+            else if (parsedLine.Length == 3) // will be 3 if ChoiceTrigger!
+            {
+                string[] temp = { parsedLine[1], parsedLine[2] };
+                dialogueText.Add(temp);
+                // parsedLine = [ ChoiceTrigger, Name, Question ] -> only want Name and Question
+                hasChoices = true;
+            }
+            else
+            {
+                dialogueText.Add(parsedLine);
+            }
+        }
 
     }
 
     // AddTextToMenu: creates a Text object for a choice by creating a new GameObject with a Text component
-    void AddTextToMenu(string choice)
+    void AddTextToMenu(string choice, ref Canvas optionDisplay)
     {
         numChoices++;
-        choiceSize.text += "\n";
         GameObject newOption = new GameObject();
         newOption.name = "Choice " + numChoices.ToString();
-        newOption.transform.SetParent(choiceDisplay.transform);
+        newOption.transform.SetParent(optionDisplay.transform);
+        newOption.transform.localScale = new Vector3(1, 1, 1);
         newOption.AddComponent<Text>().text = choice;
-        newOption.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+        newOption.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
         newOption.GetComponent<Text>().color = Color.black;
         newOption.GetComponent<Text>().font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
-        newOption.GetComponent<Text>().fontSize = 26;
+        newOption.GetComponent<Text>().fontSize = 24;
         choiceOptions.Add(newOption);
     }
 }

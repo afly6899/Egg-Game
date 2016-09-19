@@ -4,6 +4,7 @@ Mom:A valley?
 Elaine:Yeah. I'm playing this game where you have to use a grappling hook to climb up the side of a valley. See?
 Mom:That looks more like a canyon wall than a valley.
 Elaine:Eh, same difference.
+[Goto Scene A1]
 
 [Scene A1]
 Mom:All right, Elaine! Time for another year at school!
@@ -18,8 +19,13 @@ ChoiceTrigger:Mom:So are you ready to go?
 [Scene A3]
 Elaine:Yep!
 Mom:Okay! Have a good day, honey!
+[Goto Scene A5]
 
 [Scene A4]
 Elaine:Sure...
 Mom:Don't sound so down! Have a good day, honey!
+[Goto Scene A5]
 
+[Scene A5]
+Elaine:Looks like this is the end of the scene...
+Elaine:Better head to school, then!

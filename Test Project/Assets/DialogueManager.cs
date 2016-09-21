@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 
-public class DialogueManager : MonoBehaviour {
+public class DialogueManager : MonoBehaviour
+{
 
     // Input Parameters:
     // nameText (Text) -> Text UI that displays the name of the speaker
@@ -16,34 +17,102 @@ public class DialogueManager : MonoBehaviour {
     //public Text choiceSize;
     public Text dialogueText;
     public Canvas choiceDisplay;
-	public TextAsset originalFile;
-	
-    Dictionary<string, Scene> scenesByName;
+    public TextAsset originalFile;
 
+    Dictionary<string, Scene> scenesByName;
+    Dictionary<string, string[]> sceneConnections;
+
+    List<GameObject> choiceOptions;
+
+    string currentSceneName;
 
     // To initialize all the stuffs
-	void Start()
+    void Start()
     {
         scenesByName = new Dictionary<string, Scene>();
+        sceneConnections = new Dictionary<string, string[]>();
+        choiceOptions = new List<GameObject>();
         string[] scenes = Regex.Split(originalFile.text, "\\[Scene ");
         Debug.Log(scenes.Length.ToString());
         foreach (string scene in scenes)
         {
             if (scene.Length > 0)
             {
-                Scene newScene = new Scene(scene.TrimEnd().Split('\n'), ref choiceDisplay);
+                List<string> potentialConnections = new List<string>();
+                Scene newScene = new Scene(scene.TrimEnd().Split('\n'), ref potentialConnections);
                 scenesByName[newScene.sceneName] = newScene;
+                // sceneConnections[newScene.sceneName] = potentialConnections.ToArray(); // -> potentialConnections has the choice dialogue, not the scene names!
+                sceneConnections[newScene.sceneName] = newScene.goToSceneNames.ToArray();
             }
         }
+        currentSceneName = "A0";
     }
 
     // Will update the system every cycle!
     void Update()
     {
+        nameText.text = currentSceneName;
+        dialogueText.text = HelpfulFunctions.arrayToString(sceneConnections[currentSceneName]);
         if (Input.GetKeyDown(KeyCode.Return))
         {
-
+            if (scenesByName[currentSceneName].hasChoices)
+            {
+                DisplayChoices();
+            }
+            else
+            {
+                HideChoices();
+            }
+            currentSceneName = sceneConnections[currentSceneName][0];
         }
+    }
+
+    // Sets up the choice display stuff - already assuming we did the check for having choices
+    void DisplayChoices()
+    {
+        // want a Text GameObject for each choice
+        // for GameObjects that are already there, want to reuse
+        // for new GameObjects that are needed, want to create
+        int targetCount = sceneConnections[currentSceneName].Length;
+        string[] choicesToDisplay = scenesByName[currentSceneName].choices.ToArray();
+        int i;
+
+        // if targetCount is the min, then only up to targetCount number of GameObjects will be set -> need to dectivate the others
+        // if choiceOptions.Count is the min, then only choiceOption.Count number of choices will be prepared -> need to make more GameObjects
+        // if they're equal, then we're good!
+        for (i=0; i< Mathf.Min(targetCount, choiceOptions.Count); i++)
+        {
+            choiceOptions[i].SetActive(true);
+            choiceOptions[i].GetComponent<Text>().text = choicesToDisplay[i];
+        }
+        
+        for (; i < targetCount ;i++)
+        {
+            AddTextToMenu(choicesToDisplay[i], i + 1);
+        }
+    }
+
+    void HideChoices()
+    {
+        for (int i=0; i < choiceOptions.Count; i++)
+        {
+            choiceOptions[i].SetActive(false);
+        }
+    }
+
+    // AddTextToMenu: creates a Text object for a choice by creating a new GameObject with a Text component
+    void AddTextToMenu(string choice, int choiceNumber)
+    {
+        GameObject newOption = new GameObject();
+        newOption.name = "Choice " + choiceNumber.ToString();
+        newOption.transform.SetParent(choiceDisplay.transform);
+        newOption.transform.localScale = new Vector3(1, 1, 1);
+        newOption.AddComponent<Text>().text = choice;
+        newOption.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
+        newOption.GetComponent<Text>().color = Color.black;
+        newOption.GetComponent<Text>().font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+        newOption.GetComponent<Text>().fontSize = 24;
+        choiceOptions.Add(newOption);
     }
 }
 
@@ -71,36 +140,35 @@ public class DialogueManager : MonoBehaviour {
 class Scene
 {
     int numChoices;
-    bool hasChoices;
+    public bool hasChoices; // may remove public and have a getIfHasChoices function instead
     public string sceneName; // may remove public and have a getName function instead... we'll have to see
     string[] choiceText;
     List<string[]> dialogueText; // holding a list of [Name, Dialogue]
-    List<string> choices; // TEMP!
+    public List<string> choices; // TEMP!; maybe remove public and have a getChoices function instead?
     List<GameObject> choiceOptions;
-    List<string> goToSceneNames;
+    public List<string> goToSceneNames; // same as above
 
     Text choiceSize;
     Canvas choiceDisplay;
     private string[] v;
 
     // Scene(): constructor for Scene that takes in the array of text for a scene, does all the parsing!
-    public Scene (string[] sceneText, ref Canvas optionDisplay)
+    public Scene(string[] sceneText, ref List<string> potentialConnections)
     {
         // Initializing all variables
         numChoices = 0;
         hasChoices = false;
-        dialogueText = new List<string[]>();
         choices = new List<string>();
-        choiceOptions = new List<GameObject>();
+        dialogueText = new List<string[]>();
         goToSceneNames = new List<string>();
-        
+
 
 
         sceneName = sceneText[0].Substring(0, 2); // "[Scene " goes up to index 6, so name should start at 7 -> now has reformatted to just be __], so start at 0
         Debug.Log(sceneName);
 
         string[] parsedLine;
-        for (int i=1; i<sceneText.Length; i++)
+        for (int i = 1; i < sceneText.Length; i++)
         {
             parsedLine = sceneText[i].Split(':');
 
@@ -110,15 +178,13 @@ class Scene
                 //Debug.Log("Could be choice or goto statement: " + parsedLine.Length);
                 // parsedLine[0] = [Goto Scene __] -> Split by ' ' = [ [Goto, Scene, __] ] -> [2] = __] -> Substring(0,2) = __
                 // save the scene name in the goToSceneNames list
-                goToSceneNames.Add(parsedLine[0].Split(' ')[2].Substring(0,2));
+                goToSceneNames.Add(parsedLine[0].Split(' ')[2].Substring(0, 2));
                 // if there's a choice afterwards, save it as well
                 if (parsedLine.Length == 2) // is a choice option cause it has Answer in it
                 {
                     // parsedLine = [[Goto Scene __], Answer]
-                    // TEMP {
                     choices.Add(parsedLine[1]);
-                    // }
-                    AddTextToMenu(parsedLine[1], ref optionDisplay);
+                    potentialConnections.Add(parsedLine[1]);
                 }
             }
             else if (parsedLine.Length == 3) // will be 3 if ChoiceTrigger!
@@ -136,19 +202,5 @@ class Scene
 
     }
 
-    // AddTextToMenu: creates a Text object for a choice by creating a new GameObject with a Text component
-    void AddTextToMenu(string choice, ref Canvas optionDisplay)
-    {
-        numChoices++;
-        GameObject newOption = new GameObject();
-        newOption.name = "Choice " + numChoices.ToString();
-        newOption.transform.SetParent(optionDisplay.transform);
-        newOption.transform.localScale = new Vector3(1, 1, 1);
-        newOption.AddComponent<Text>().text = choice;
-        newOption.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
-        newOption.GetComponent<Text>().color = Color.black;
-        newOption.GetComponent<Text>().font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
-        newOption.GetComponent<Text>().fontSize = 24;
-        choiceOptions.Add(newOption);
-    }
+
 }

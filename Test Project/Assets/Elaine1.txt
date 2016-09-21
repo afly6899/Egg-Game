@@ -29,3 +29,17 @@ Mom:Don't sound so down! Have a good day, honey!
 [Scene A5]
 Elaine:Looks like this is the end of the scene...
 Elaine:Better head to school, then!
+ChoiceTrigger:Mom:I love you!
+[Goto Scene A6]:You, too!
+[Goto Scene A7]:...
+
+[Scene A6]
+Elaine:You, too!
+[Goto Scene A8]
+
+[Scene A7]
+Elaine:...
+[Goto Scene A8]
+
+[Scene A8]
+Elaine:Bye!

@@ -9,12 +9,10 @@ public class DialogueManager : MonoBehaviour
 
     // Input Parameters:
     // nameText (Text) -> Text UI that displays the name of the speaker
-    // choiceSize (Text) -> Text UI of x number of \n characters, where x = number of choices
     // dialogueText (Text) -> Text UI that displays the dialogue of the speaker
     // choiceDisplay (Canvas) -> Canvas UI that holds the Text UI for the choices (is parent to choiceSize)
     // originalFile (TextAsset) -> Text File that contains all the scene information
     public Text nameText;
-    //public Text choiceSize;
     public Text dialogueText;
     public Canvas choiceDisplay;
     public TextAsset originalFile;
@@ -24,6 +22,10 @@ public class DialogueManager : MonoBehaviour
 
     List<GameObject> choiceOptions;
 
+    int chosenChoice;
+    bool isLastScene;
+    bool scenesContinue;
+    bool isMakingChoice;
     string currentSceneName;
 
     // To initialize all the stuffs
@@ -40,30 +42,76 @@ public class DialogueManager : MonoBehaviour
             {
                 List<string> potentialConnections = new List<string>();
                 Scene newScene = new Scene(scene.TrimEnd().Split('\n'), ref potentialConnections);
-                scenesByName[newScene.sceneName] = newScene;
-                // sceneConnections[newScene.sceneName] = potentialConnections.ToArray(); // -> potentialConnections has the choice dialogue, not the scene names!
-                sceneConnections[newScene.sceneName] = newScene.goToSceneNames.ToArray();
+                scenesByName[newScene.getSceneName()] = newScene;
+                sceneConnections[newScene.getSceneName()] = potentialConnections.ToArray();
             }
         }
-        currentSceneName = "A0";
+
+        chosenChoice = 0;
+        currentSceneName = scenes[1].Substring(0,2);
+        isLastScene = !(sceneConnections[currentSceneName].Length > 0);
+        isMakingChoice = false;
+        scenesContinue = true;
+
+        nextDialogue(scenesByName[currentSceneName].getDialogue());
     }
 
     // Will update the system every cycle!
     void Update()
     {
-        nameText.text = currentSceneName;
-        dialogueText.text = HelpfulFunctions.arrayToString(sceneConnections[currentSceneName]);
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (scenesContinue) // only takes in input if the scene is still going on
         {
-            if (scenesByName[currentSceneName].hasChoices)
+            if (Input.GetKeyDown(KeyCode.Return))
             {
-                DisplayChoices();
+                if (isLastScene && scenesByName[currentSceneName].getIsDone())
+                {
+                    scenesContinue = false;
+                }
+
+                if (isMakingChoice)
+                {
+                    isMakingChoice = false;
+                    // select the choice?
+                    nextScene(chosenChoice);
+                    nextDialogue(scenesByName[currentSceneName].getDialogue());
+                    HideChoices(); // this means that once a choice is made, the choices are automatically deactivated
+                }
+                else
+                {
+                    if (scenesByName[currentSceneName].getIsDone()) // if the current scene is done: check if have choice, else keep the scene going
+                    {
+                        if (scenesByName[currentSceneName].getHasChoice()) // if this scene has choices, then want to display them since the scene is done
+                        {
+                            chosenChoice = 0;
+                            isMakingChoice = true;
+                            DisplayChoices();
+                        }
+                        else // if the scene doesn't have choices, then move on to the next scene
+                        {
+                            nextScene();
+                            if (!isLastScene)
+                            {
+                                nextDialogue(scenesByName[currentSceneName].getDialogue());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        nextDialogue(scenesByName[currentSceneName].getDialogue());
+                    }
+                }
+
             }
-            else
+            else if (Input.GetKeyDown(KeyCode.UpArrow) && chosenChoice > 0)
             {
-                HideChoices();
+                chosenChoice--;
+                ChangeSelectionText(chosenChoice, -1);
             }
-            currentSceneName = sceneConnections[currentSceneName][0];
+            else if (Input.GetKeyDown(KeyCode.DownArrow) && chosenChoice < sceneConnections[currentSceneName].Length-1)
+            {
+                chosenChoice++;
+                ChangeSelectionText(chosenChoice, 1);
+            }
         }
     }
 
@@ -74,7 +122,7 @@ public class DialogueManager : MonoBehaviour
         // for GameObjects that are already there, want to reuse
         // for new GameObjects that are needed, want to create
         int targetCount = sceneConnections[currentSceneName].Length;
-        string[] choicesToDisplay = scenesByName[currentSceneName].choices.ToArray();
+        string[] choicesToDisplay = scenesByName[currentSceneName].getChoices();
         int i;
 
         // if targetCount is the min, then only up to targetCount number of GameObjects will be set -> need to dectivate the others
@@ -90,6 +138,8 @@ public class DialogueManager : MonoBehaviour
         {
             AddTextToMenu(choicesToDisplay[i], i + 1);
         }
+        chosenChoice = 0;
+        ChangeSelectionText(0, 0);
     }
 
     void HideChoices()
@@ -114,10 +164,59 @@ public class DialogueManager : MonoBehaviour
         newOption.GetComponent<Text>().fontSize = 24;
         choiceOptions.Add(newOption);
     }
-}
 
-//  hi
-//      
+    void ChangeSelectionText(int newChoice, int changedBy)
+    {
+        choiceOptions[newChoice-changedBy].GetComponent<Text>().fontStyle = FontStyle.Normal;
+        choiceOptions[newChoice].GetComponent<Text>().fontStyle = FontStyle.Bold;
+    }
+
+    void nextScene(int chosenScene = 0)
+    {
+        if (sceneConnections[currentSceneName].Length > 0)
+        {
+            currentSceneName = sceneConnections[currentSceneName][chosenScene];
+        }
+        else
+        {
+            isLastScene = true;
+        }
+    }
+
+    void nextDialogue(string[] text)
+    {
+        nameText.text = text[0];
+        dialogueText.text = text[1];
+    }
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Scene (class) -> Class to hold the scene dialogue, choices, and next Scenes
 //      - takes in the text for that scene as an array of lines formatted as either __] (used to be [Scene __]) or
@@ -139,14 +238,12 @@ public class DialogueManager : MonoBehaviour
 
 class Scene
 {
-    int numChoices;
-    public bool hasChoices; // may remove public and have a getIfHasChoices function instead
-    public string sceneName; // may remove public and have a getName function instead... we'll have to see
-    string[] choiceText;
+    int currentDialogue;
+    bool hasChoices; // may remove public and have a getIfHasChoices function instead
+    bool isDone;
+    string sceneName; // may remove public and have a getName function instead... we'll have to see
+    List<string> choices; // TEMP!; maybe remove public and have a getChoices function instead?
     List<string[]> dialogueText; // holding a list of [Name, Dialogue]
-    public List<string> choices; // TEMP!; maybe remove public and have a getChoices function instead?
-    List<GameObject> choiceOptions;
-    public List<string> goToSceneNames; // same as above
 
     Text choiceSize;
     Canvas choiceDisplay;
@@ -156,15 +253,15 @@ class Scene
     public Scene(string[] sceneText, ref List<string> potentialConnections)
     {
         // Initializing all variables
-        numChoices = 0;
+        currentDialogue = 0;
+        isDone = false;
         hasChoices = false;
         choices = new List<string>();
         dialogueText = new List<string[]>();
-        goToSceneNames = new List<string>();
 
 
 
-        sceneName = sceneText[0].Substring(0, 2); // "[Scene " goes up to index 6, so name should start at 7 -> now has reformatted to just be __], so start at 0
+        sceneName = sceneText[0].Substring(0, sceneText[0].Length-2);
         Debug.Log(sceneName);
 
         string[] parsedLine;
@@ -178,13 +275,12 @@ class Scene
                 //Debug.Log("Could be choice or goto statement: " + parsedLine.Length);
                 // parsedLine[0] = [Goto Scene __] -> Split by ' ' = [ [Goto, Scene, __] ] -> [2] = __] -> Substring(0,2) = __
                 // save the scene name in the goToSceneNames list
-                goToSceneNames.Add(parsedLine[0].Split(' ')[2].Substring(0, 2));
+                potentialConnections.Add(parsedLine[0].Split(' ')[2].Substring(0, 2));
                 // if there's a choice afterwards, save it as well
                 if (parsedLine.Length == 2) // is a choice option cause it has Answer in it
                 {
                     // parsedLine = [[Goto Scene __], Answer]
                     choices.Add(parsedLine[1]);
-                    potentialConnections.Add(parsedLine[1]);
                 }
             }
             else if (parsedLine.Length == 3) // will be 3 if ChoiceTrigger!
@@ -202,5 +298,18 @@ class Scene
 
     }
 
+    public bool getIsDone() { return isDone; }
+    public bool getHasChoice() { return hasChoices; }
+    public string getSceneName() { return sceneName; }
+    public string[] getChoices() { return choices.ToArray(); }
 
+    public string[] getDialogue() // sets isDone to true if this is the last line of dialogue
+    {
+        currentDialogue++;
+        if (currentDialogue == dialogueText.Count)
+        {
+            isDone = true;
+        }
+        return dialogueText[currentDialogue-1];
+    }
 }

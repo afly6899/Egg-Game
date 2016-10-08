@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -47,9 +50,9 @@ public class DialogGraph
 		}
 	}
 
-	private void loadScenes(string sceneFile)
+	private void loadScenes(TextAsset sceneFile)
 	{
-		var lines = System.IO.File.ReadAllLines (sceneFile);
+		var lines = sceneFile.text.Split (Environment.NewLine);
 		List<string> currSceneText = null;
 
 		Scene s = null;
@@ -71,7 +74,7 @@ public class DialogGraph
 
 	}
 
-	public DialogGraph(string sceneFile, string startScene)
+	public DialogGraph(TextAsset sceneFile, string startScene)
 	{
 		loadScenes (sceneFile);
 		this.currScene = startScene;

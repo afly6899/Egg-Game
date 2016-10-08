@@ -12,6 +12,7 @@ public class DialogueManager : MonoBehaviour
     // dialogueText (Text) -> Text UI that displays the dialogue of the speaker
     // choiceDisplay (Canvas) -> Canvas UI that holds the Text UI for the choices (is parent to choiceSize)
     // originalFile (TextAsset) -> Text File that contains all the scene information
+    public Image characterDisplay;
     public Text nameText;
     public Text dialogueText;
     public Canvas choiceDisplay;

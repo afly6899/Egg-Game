@@ -7,31 +7,43 @@ public class DialogGraph
 	private Dictionary<string, Scene> scenes;
 	private string currScene;
 
+	public Scene CurrentScene
+	{
+		get
+		{
+			return this.scenes [currScene];
+		}
+	}
+
 	public string CurrentSpeaker
 	{
-		get;
-		private set;
+		get
+		{
+			return this.CurrentScene.CurrentDialogue.Speaker;
+		}
 	}
 
 	public string CurrentText
 	{
 		get
 		{
-			return this.scenes [currScene].CurrentDialog;	
+			return this.CurrentScene.CurrentDialogue.Dialogue;
 		}
 	}
 
 	public List<string> CurrentChoices 
 	{
-		get;
-		private set;
+		get
+		{
+			return this.CurrentScene.CurrentDialogue.Options.Keys;
+		}
 	}
 
 	public bool HasChoices
 	{
 		get
 		{
-			return CurrentChoices != null;
+			return this.CurrentChoices != null;
 		}
 	}
 
@@ -65,5 +77,14 @@ public class DialogGraph
 		this.currScene = startScene;
 	}
 
+	public void nextDialogue(string choice = null)
+	{
+		if (!this.HasChoices && this.CurrentScene.CurrentDialogue.Goto == null)
+			this.CurrentScene.nextDialogue ();
+		else if (this.HasChoices)
+			this.currScene = this.CurrentScene.CurrentDialogue.Options [choice];
 
+		if (this.CurrentScene.CurrentDialogue.Goto != null)
+			this.currScene = this.CurrentScene.CurrentDialogue.Goto;
+	}
 }

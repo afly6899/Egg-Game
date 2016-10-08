@@ -34,7 +34,7 @@ class Scene
         hasChoices = false;
         choices = new List<string>();
         dialogueText = new List<string[]>();
-        sceneName = sceneText[0].Substring(0, sceneText[0].Length - 2);
+		sceneName = sceneText[0].Substring(0, sceneText[0].IndexOf(']'));
 
         string[] parsedLine;
         for (int i = 1; i < sceneText.Length; i++)

@@ -18,101 +18,69 @@ public class DialogueManager : MonoBehaviour
     public Canvas choiceDisplay;
     public TextAsset originalFile;
 
-    Dictionary<string, Scene> scenesByName;
-    Dictionary<string, string[]> sceneConnections;
+	DialogGraph dg;
 
     List<GameObject> choiceOptions;
-
-    int chosenChoice;
-    bool isLastScene;
-    bool scenesContinue;
-    bool isMakingChoice;
-    string currentSceneName;
+	int chosenChoice;
 
     // To initialize all the stuffs
     void Start()
     {
-        scenesByName = new Dictionary<string, Scene>();
-        sceneConnections = new Dictionary<string, string[]>();
+		this.dg = new DialogGraph (originalFile, "A0");
         choiceOptions = new List<GameObject>();
-        string[] scenes = Regex.Split(originalFile.text, "\\[Scene ");
-        Debug.Log(scenes.Length.ToString());
-        foreach (string scene in scenes)
-        {
-            if (scene.Length > 0)
-            {
-                List<string> potentialConnections = new List<string>();
-                Scene newScene = new Scene(scene.TrimEnd().Split('\n'), ref potentialConnections);
-                scenesByName[newScene.getSceneName()] = newScene;
-                sceneConnections[newScene.getSceneName()] = potentialConnections.ToArray();
-            }
-        }
-
-        chosenChoice = 0;
-        currentSceneName = scenes[1].Substring(0,2);
-        isLastScene = !(sceneConnections[currentSceneName].Length > 0);
-        isMakingChoice = false;
-        scenesContinue = true;
-
-        nextDialogue(scenesByName[currentSceneName].getDialogue());
     }
 
     // Will update the system every cycle!
     void Update()
     {
-        if (scenesContinue) // only takes in input if the scene is still going on
-        {
-            if (Input.GetKeyDown(KeyCode.Return))
-            {
-                if (isLastScene && scenesByName[currentSceneName].getIsDone())
-                {
-                    scenesContinue = false;
-                }
+		if (this.dg.CurrentScene.IsDone && this.dg.CurrentChoices == null)
+			return;
 
-                if (isMakingChoice)
+        if (Input.GetKeyDown(KeyCode.Return))
+		{
+            if (isMakingChoice)
+            {
+                isMakingChoice = false;
+                // select the choice?
+                nextScene(chosenChoice);
+                nextDialogue(scenesByName[currentSceneName].nextDialogue());
+                HideChoices(); // this means that once a choice is made, the choices are automatically deactivated
+            }
+            else
+            {
+                if (scenesByName[currentSceneName].getIsDone()) // if the current scene is done: check if have choice, else keep the scene going
                 {
-                    isMakingChoice = false;
-                    // select the choice?
-                    nextScene(chosenChoice);
-                    nextDialogue(scenesByName[currentSceneName].getDialogue());
-                    HideChoices(); // this means that once a choice is made, the choices are automatically deactivated
+                    if (scenesByName[currentSceneName].getHasChoice()) // if this scene has choices, then want to display them since the scene is done
+                    {
+                        chosenChoice = 0;
+                        isMakingChoice = true;
+                        DisplayChoices();
+                    }
+                    else // if the scene doesn't have choices, then move on to the next scene
+                    {
+                        nextScene();
+                        if (!isLastScene)
+                        {
+                            nextDialogue(scenesByName[currentSceneName].nextDialogue());
+                        }
+                    }
                 }
                 else
                 {
-                    if (scenesByName[currentSceneName].getIsDone()) // if the current scene is done: check if have choice, else keep the scene going
-                    {
-                        if (scenesByName[currentSceneName].getHasChoice()) // if this scene has choices, then want to display them since the scene is done
-                        {
-                            chosenChoice = 0;
-                            isMakingChoice = true;
-                            DisplayChoices();
-                        }
-                        else // if the scene doesn't have choices, then move on to the next scene
-                        {
-                            nextScene();
-                            if (!isLastScene)
-                            {
-                                nextDialogue(scenesByName[currentSceneName].getDialogue());
-                            }
-                        }
-                    }
-                    else
-                    {
-                        nextDialogue(scenesByName[currentSceneName].getDialogue());
-                    }
+                    nextDialogue(scenesByName[currentSceneName].nextDialogue());
                 }
+            }
 
-            }
-            else if (Input.GetKeyDown(KeyCode.UpArrow) && chosenChoice > 0)
-            {
-                chosenChoice--;
-                ChangeSelectionText(chosenChoice, -1);
-            }
-            else if (Input.GetKeyDown(KeyCode.DownArrow) && chosenChoice < sceneConnections[currentSceneName].Length-1)
-            {
-                chosenChoice++;
-                ChangeSelectionText(chosenChoice, 1);
-            }
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow) && chosenChoice > 0)
+        {
+            chosenChoice--;
+            ChangeSelectionText(chosenChoice, -1);
+        }
+		else if (Input.GetKeyDown(KeyCode.DownArrow) && chosenChoice < this.dg.NumChoices)
+        {
+            chosenChoice++;
+            ChangeSelectionText(chosenChoice, 1);
         }
     }
 
@@ -122,8 +90,8 @@ public class DialogueManager : MonoBehaviour
         // want a Text GameObject for each choice
         // for GameObjects that are already there, want to reuse
         // for new GameObjects that are needed, want to create
-        int targetCount = sceneConnections[currentSceneName].Length;
-        string[] choicesToDisplay = scenesByName[currentSceneName].getChoices();
+		int targetCount = this.dg.NumChoices;
+		string[] choicesToDisplay = this.dg.CurrentChoices;
         int i;
 
         // if targetCount is the min, then only up to targetCount number of GameObjects will be set -> need to dectivate the others
@@ -139,6 +107,7 @@ public class DialogueManager : MonoBehaviour
         {
             AddTextToMenu(choicesToDisplay[i], i + 1);
         }
+
         chosenChoice = 0;
         ChangeSelectionText(0, 0);
     }

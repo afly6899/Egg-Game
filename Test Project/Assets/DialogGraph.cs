@@ -42,11 +42,19 @@ public class DialogGraph
 		}
 	}
 
+	public int NumChoices
+	{
+		get
+		{
+			return (this.CurrentChoices == null ? 0 : this.CurrentChoices.Count);
+		}
+	}
+
 	public bool HasChoices
 	{
 		get
 		{
-			return this.CurrentChoices != null;
+			return this.NumChoices == 0;
 		}
 	}
 
@@ -71,13 +79,14 @@ public class DialogGraph
 
 		s = new Scene(currSceneText);
 		this.scenes.Add(s.Name, s);
-
+		this.currScene = lines[0].Substring("[Scene ".Length);
+		this.currScene = this.currScene.Substring(0, this.currScene.IndexOf(']'));
 	}
 
-	public DialogGraph(TextAsset sceneFile, string startScene)
+	public DialogGraph(TextAsset sceneFile, string startScene = null)
 	{
 		loadScenes (sceneFile);
-		this.currScene = startScene;
+		this.currScene = startScene ?? this.currScene;
 	}
 
 	public void nextDialogue(string choice = null)

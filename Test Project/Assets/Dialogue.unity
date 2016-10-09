@@ -1556,7 +1556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f35dded6fd45b244688ecb3440eb079c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxChoices: 0
+  maxChoices: 5
   textfile: {fileID: 4900000, guid: 34f6c434d56061843aea08dbc8f90677, type: 3}
   dialoguePanel: {fileID: 1489876249}
   nameText: {fileID: 553057201}

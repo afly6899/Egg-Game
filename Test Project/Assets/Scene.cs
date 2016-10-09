@@ -88,7 +88,7 @@ public class Scene
 					next = next.Substring(0, next.IndexOf(']'));
 
 					string choiceText = sceneText[i].Substring(sceneText[i].IndexOf(':') + 1);
-					currLine.Options.Add(next, choiceText);
+					currLine.Options.Add(choiceText, next);
 				}
 
 				this.dialogueText.Add(currLine);

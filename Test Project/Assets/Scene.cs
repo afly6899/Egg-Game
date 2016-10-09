@@ -16,14 +16,14 @@ using System.Collections.Generic;
 //  1) create helpful comments on what's happening in the code (for each section or statement?)
 //  2) should the Scene class hold the text for the choices? Or should the DialogueManager?
 
-class Scene
+public class Scene
 {
-	struct DialogueLine
+	public class DialogueLine
 	{
-		public string Speaker { get; private set; }
-		public string Dialogue { get; private set; }
-		public Dictionary<string, string> Options { get; private set; } // maps the text of the option to the name of the scene to which the option takes you
-		public string Goto { get; private set; }
+		public string Speaker;
+		public string Dialogue;
+		public Dictionary<string, string> Options; // maps the text of the option to the name of the scene to which the option takes you
+		public string Goto;
 
 		public DialogueLine()
 		{
@@ -60,14 +60,18 @@ class Scene
 	}
 
     // Scene(): constructor for Scene that takes in the array of text for a scene, does all the parsing!
-	public Scene(string[] sceneText)
+	public Scene(List<string> sceneText)
     {
         currentDialogue = 0;
 		dialogueText = new List<DialogueLine>();
-		this.Name = sceneText[0].Substring(0, sceneText[0].IndexOf(']'));
+		this.Name = sceneText [0].Substring ("[Scene ".Length);
+		this.Name = this.Name.Substring (0, this.Name.IndexOf (']'));
 
-		for (int i = 1; i < sceneText.Length; i++)
+		for (int i = 1; i < sceneText.Count; i++)
 		{
+			if (sceneText [i] == null || sceneText [i].Trim () == "")
+				continue;
+			
 			string []parsedLine = sceneText[i].Split(':');
 			DialogueLine currLine = new DialogueLine();
 
@@ -78,7 +82,7 @@ class Scene
 
 				currLine.Options = new Dictionary<string, string>();
 
-				for (++i; i < sceneText.Length && sceneText[i].StartsWith("[Goto Scene "); i++)
+				for (++i; i < sceneText.Count && sceneText[i].StartsWith("[Goto Scene "); i++)
 				{
 					string next = sceneText[i].Substring("[Goto Scene ".Length);
 					next = next.Substring(0, next.IndexOf(']'));

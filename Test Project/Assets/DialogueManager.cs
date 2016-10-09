@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿/*
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -159,3 +160,4 @@ public class DialogueManager : MonoBehaviour
         dialogueText.text = text[1];
     }
 }
+*/

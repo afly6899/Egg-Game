@@ -2,8 +2,10 @@
 using UnityEngine.UI;
 
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 public class DialogGraph
 {
@@ -38,7 +40,9 @@ public class DialogGraph
 	{
 		get
 		{
-			return this.CurrentScene.CurrentDialogue.Options.Keys;
+			if (this.HasChoices)
+				return this.CurrentScene.CurrentDialogue.Options.Select(o => o.Key).ToList();
+			return null;
 		}
 	}
 
@@ -46,7 +50,7 @@ public class DialogGraph
 	{
 		get
 		{
-			return (this.CurrentChoices == null ? 0 : this.CurrentChoices.Count);
+			return (this.CurrentChoices == null ? 0 : this.CurrentChoices.Count());
 		}
 	}
 
@@ -60,17 +64,22 @@ public class DialogGraph
 
 	private void loadScenes(TextAsset sceneFile)
 	{
-		var lines = sceneFile.text.Split (Environment.NewLine);
+		var lines = Regex.Split(sceneFile.text, "\r\n|\r|\n");
 		List<string> currSceneText = null;
 
+		this.scenes = new Dictionary<string, Scene>();
 		Scene s = null;
 
 		foreach (var line in lines) 
 		{
-			if (line.StartsWith ("[Scene ") && currSceneText != null) 
+			if (line.StartsWith ("[Scene ")) 
 			{
-				s = new Scene (currSceneText);
-				this.scenes.Add (s.Name, s);
+				if (currSceneText != null)
+				{
+					s = new Scene (currSceneText);
+					this.scenes.Add (s.Name, s);
+				}
+
 				currSceneText = new List<string> ();
 			}
 
@@ -83,9 +92,14 @@ public class DialogGraph
 		this.currScene = this.currScene.Substring(0, this.currScene.IndexOf(']'));
 	}
 
-	public DialogGraph(TextAsset sceneFile, string startScene = null)
+	public DialogGraph(TextAsset sceneFile)
 	{
 		loadScenes (sceneFile);
+	}
+
+	public DialogGraph(TextAsset sceneFile, string startScene)
+	{
+		loadScenes(sceneFile);
 		this.currScene = startScene ?? this.currScene;
 	}
 

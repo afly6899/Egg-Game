@@ -1,10 +1,15 @@
 fileFormatVersion: 2
 guid: f35dded6fd45b244688ecb3440eb079c
-timeCreated: 1475966501
+timeCreated: 1475972268
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - textfile: {fileID: 4900000, guid: 34f6c434d56061843aea08dbc8f90677, type: 3}
+  - dialoguePanel: {instanceID: 0}
+  - nameText: {instanceID: 0}
+  - dialogueText: {instanceID: 0}
+  - choiceDisplay: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 using System.Collections.Generic;
 
 public class DialogueGUI : MonoBehaviour
@@ -23,7 +24,7 @@ public class DialogueGUI : MonoBehaviour
     void Start()
     {
         //dialogueGraph = new DialogGraph(textfile, textfile.text.Substring(textfile.text.IndexOf(' ')+1, textfile.text.IndexOf(']')));
-        dialogueGraph = new DialogGraph("Elaine1.txt", textfile.text.Substring(textfile.text.IndexOf(' ') + 1, textfile.text.IndexOf(']')));
+		dialogueGraph = new DialogGraph(textfile);
         choiceOptions = new List<GameObject>();
         AddTextToMenu();
 
@@ -85,7 +86,7 @@ public class DialogueGUI : MonoBehaviour
 
     void SetChoiceButtons(List<string> choices)
     {
-        for (int i = 0; i < choices.Count; i++)
+		for (int i = 0; i < choices.Count(); i++)
         {
             choiceOptions[i].SetActive(true);
             choiceOptions[i].GetComponent<Text>().text = choices[i];

@@ -43,8 +43,8 @@ public class DialogueGUI : MonoBehaviour
         {
             if (selectedChoice > -1)
             {
-                selectedChoice = -1;
                 dialogueGraph.nextDialogue(dialogueGraph.CurrentChoices[selectedChoice]);
+                selectedChoice = -1;
                 HideChoiceButtons(); // this means that once a choice is made, the choices are automatically deactivated
             }
             else
@@ -59,7 +59,7 @@ public class DialogueGUI : MonoBehaviour
             nameText.text = dialogueGraph.CurrentSpeaker;
             dialogueText.text = dialogueGraph.CurrentText;
         }
-        if (selectedChoice > -1) { 
+        else if (selectedChoice > -1) { 
         if (Input.GetKeyDown(KeyCode.UpArrow) && selectedChoice > 0)
             {
                 ChangeSelectionText(--selectedChoice, -1);

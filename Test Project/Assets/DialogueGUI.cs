@@ -23,6 +23,7 @@ public class DialogueGUI : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+		
         //dialogueGraph = new DialogGraph(textfile, textfile.text.Substring(textfile.text.IndexOf(' ')+1, textfile.text.IndexOf(']')));
 		dialogueGraph = new DialogGraph(textfile);
         choiceOptions = new List<GameObject>();

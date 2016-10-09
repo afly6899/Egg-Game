@@ -40,7 +40,7 @@ public class DialogGraph
 	{
 		get
 		{
-			if (this.HasChoices)
+			if (this.CurrentScene.CurrentDialogue.Options != null && this.CurrentScene.CurrentDialogue.Options.Count > 0)
 				return this.CurrentScene.CurrentDialogue.Options.Select(o => o.Key).ToList();
 			return null;
 		}
@@ -58,7 +58,7 @@ public class DialogGraph
 	{
 		get
 		{
-			return this.NumChoices == 0;
+			return this.NumChoices != 0;
 		}
 	}
 

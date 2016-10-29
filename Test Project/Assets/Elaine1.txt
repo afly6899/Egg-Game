@@ -4,9 +4,6 @@ Mom:A valley?
 Elaine:Yeah. I'm playing this game where you have to use a grappling hook to climb up the side of a valley. See?
 Mom:That looks more like a canyon wall than a valley.
 Elaine:Eh, same difference.
-[Goto Scene A1]
-
-[Scene A1]
 Mom:All right, Elaine! Time for another year at school!
 Elaine:You sound so excited mom. I'm pretty sure I wasn't bothering you that much over the summer!
 Mom:Ahaha, of course you weren't, dear! It's just exciting to see you start your senior year of high school.

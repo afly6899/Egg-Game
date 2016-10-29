@@ -16,72 +16,105 @@ using System.Collections.Generic;
 //  1) create helpful comments on what's happening in the code (for each section or statement?)
 //  2) should the Scene class hold the text for the choices? Or should the DialogueManager?
 
-class Scene
+public class Scene
 {
-    int currentDialogue;
-    bool hasChoices;
-    bool isDone;
-    string sceneName;
-    List<string> choices; // TEMP!
-    List<string[]> dialogueText; // holding a list of [Name, Dialogue]
+	public class DialogueLine
+	{
+		public string Speaker;
+		public string Dialogue;
+		public Dictionary<string, string> Options; // maps the text of the option to the name of the scene to which the option takes you
+		public string Goto;
+
+		public DialogueLine()
+		{
+			this.Speaker = "";
+			this.Dialogue = "";
+			this.Options = null;
+			this.Goto = null;
+		}
+	}
+
+    private int currentDialogue;
+	private List<DialogueLine> dialogueText; // holding a list of [Name, Dialogue]
+
+	public string Name
+	{
+		get;
+		private set;
+	}
+
+	public DialogueLine CurrentDialogue
+	{
+		get
+		{
+			return this.dialogueText [this.currentDialogue];
+		}
+	}
+
+	public bool IsDone
+	{
+		get
+		{
+			return this.currentDialogue >= this.dialogueText.Count;
+		}
+	}
 
     // Scene(): constructor for Scene that takes in the array of text for a scene, does all the parsing!
-    public Scene(string[] sceneText, ref List<string> potentialConnections)
+	public Scene(List<string> sceneText)
     {
-        // Initializing all variables
         currentDialogue = 0;
-        isDone = false;
-        hasChoices = false;
-        choices = new List<string>();
-        dialogueText = new List<string[]>();
-        sceneName = sceneText[0].Substring(0, sceneText[0].Length - 2);
+		dialogueText = new List<DialogueLine>();
+		this.Name = sceneText [0].Substring ("[Scene ".Length);
+		this.Name = this.Name.Substring (0, this.Name.IndexOf (']'));
 
-        string[] parsedLine;
-        for (int i = 1; i < sceneText.Length; i++)
-        {
-            parsedLine = sceneText[i].Split(':');
+		for (int i = 1; i < sceneText.Count; i++)
+		{
+			if (sceneText [i] == null || sceneText [i].Trim () == "")
+				continue;
+			
+			string []parsedLine = sceneText[i].Split(':');
+			DialogueLine currLine = new DialogueLine();
 
-            // first: has [Goto Scene A1] condition
-            if (parsedLine[0][0] == '[') // could either be a choice option or just a goto statement
-            {
-                //Debug.Log("Could be choice or goto statement: " + parsedLine.Length);
-                // parsedLine[0] = [Goto Scene __] -> Split by ' ' = [ [Goto, Scene, __] ] -> [2] = __] -> Substring(0,2) = __
-                // save the scene name in the goToSceneNames list
-                potentialConnections.Add(parsedLine[0].Split(' ')[2].Substring(0, 2));
-                // if there's a choice afterwards, save it as well
-                if (parsedLine.Length == 2) // is a choice option cause it has Answer in it
-                {
-                    // parsedLine = [[Goto Scene __], Answer]
-                    choices.Add(parsedLine[1]);
-                }
-            }
-            else if (parsedLine.Length == 3) // will be 3 if ChoiceTrigger!
-            {
-                string[] temp = { parsedLine[1], parsedLine[2] };
-                dialogueText.Add(temp);
-                // parsedLine = [ ChoiceTrigger, Name, Question ] -> only want Name and Question
-                hasChoices = true;
-            }
-            else
-            {
-                dialogueText.Add(parsedLine);
-            }
-        }
+			if (parsedLine[0].Trim() == "ChoiceTrigger")
+			{
+				currLine.Speaker = parsedLine[1];
+				currLine.Dialogue = parsedLine[2];
 
+				currLine.Options = new Dictionary<string, string>();
+
+				for (++i; i < sceneText.Count && sceneText[i].StartsWith("[Goto Scene "); i++)
+				{
+					string next = sceneText[i].Substring("[Goto Scene ".Length);
+					next = next.Substring(0, next.IndexOf(']'));
+
+					string choiceText = sceneText[i].Substring(sceneText[i].IndexOf(':') + 1);
+					currLine.Options.Add(choiceText, next);
+				}
+
+				this.dialogueText.Add(currLine);
+				break;
+			}
+			else if (parsedLine[0].Trim().StartsWith("[Goto Scene "))
+			{
+				currLine.Goto = sceneText[i].Substring("[Goto Scene ".Length);
+				currLine.Goto = currLine.Goto.Substring(0, currLine.Goto.IndexOf(']'));
+
+				this.dialogueText.Add(currLine);
+			}
+			else
+			{
+				currLine.Speaker = parsedLine[0];
+				currLine.Dialogue = parsedLine[1];
+
+				this.dialogueText.Add(currLine);
+			}
+		}
     }
 
-    public bool getIsDone() { return isDone; }
-    public bool getHasChoice() { return hasChoices; }
-    public string getSceneName() { return sceneName; }
-    public string[] getChoices() { return choices.ToArray(); }
-
-    public string[] getDialogue() // sets isDone to true if this is the last line of dialogue
+    public DialogueLine nextDialogue()
     {
-        currentDialogue++;
-        if (currentDialogue == dialogueText.Count)
-        {
-            isDone = true;
-        }
-        return dialogueText[currentDialogue - 1];
+		if (this.currentDialogue < this.dialogueText.Count - 1)
+			this.currentDialogue++;
+		return this.CurrentDialogue;
     }
 }

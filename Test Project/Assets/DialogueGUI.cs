@@ -56,7 +56,7 @@ public class DialogueGUI : MonoBehaviour
                     SetChoiceButtons(dialogueGraph.CurrentChoices);
                 }
             }
-            nameText.text = dialogueGraph.CurrentSpeaker;
+			nameText.text = dialogueGraph.CurrentSpeaker;
             dialogueText.text = dialogueGraph.CurrentText;
         }
         else if (selectedChoice > -1) { 

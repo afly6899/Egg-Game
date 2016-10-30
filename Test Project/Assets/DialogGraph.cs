@@ -106,11 +106,20 @@ public class DialogGraph
 	public void nextDialogue(string choice = null)
 	{
 		if (!this.HasChoices && this.CurrentScene.CurrentDialogue.Goto == null)
+		{
 			this.CurrentScene.nextDialogue ();
+		}
 		else if (this.HasChoices)
-			this.currScene = this.CurrentScene.CurrentDialogue.Options [choice];
+		{
+			var optionTaken = this.CurrentScene.CurrentDialogue.Options[choice];
+
+			this.currScene = optionTaken.NextScene;
+			GameLoader.CurrentGame.TakeDialogOption(optionTaken);
+		}
 
 		if (this.CurrentScene.CurrentDialogue.Goto != null)
 			this.currScene = this.CurrentScene.CurrentDialogue.Goto;
+
+		GameLoader.SaveGame();
 	}
 }

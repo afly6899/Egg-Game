@@ -9,9 +9,9 @@ Elaine:You sound so excited mom. I'm pretty sure I wasn't bothering you that muc
 Mom:Ahaha, of course you weren't, dear! It's just exciting to see you start your senior year of high school.
 Mom:It felt like just yesterday when we were first enrolling you into this school... but enough with me getting all nostalgic on you. Go on and have a great first day of school!
 Elaine:R-right! Thanks mom!
-ChoiceTrigger:Mom:So are you ready to go?
-[Goto Scene A3]:Yep!
-[Goto Scene A4]:Sure...
+ChoiceTrigger,ReadyToGo:Mom:So are you ready to go?
+[Goto Scene A3,Yep]:Yep!
+[Goto Scene A4,Sure]:Sure...
 
 [Scene A3]
 Elaine:Yep!
@@ -26,9 +26,9 @@ Mom:Don't sound so down! Have a good day, honey!
 [Scene A5]
 Elaine:Looks like this is the end of the scene...
 Elaine:Better head to school, then!
-ChoiceTrigger:Mom:I love you!
-[Goto Scene A6]:You, too!
-[Goto Scene A7]:...
+ChoiceTrigger,LoveYou:Mom:I love you!
+[Goto Scene A6,YouToo]:You, too!
+[Goto Scene A7,Silence]:...
 
 [Scene A6]
 Elaine:You, too!

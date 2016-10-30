@@ -18,11 +18,12 @@ using System.Collections.Generic;
 
 public class Scene
 {
+	[System.Serializable]
 	public class DialogueLine
 	{
 		public string Speaker;
 		public string Dialogue;
-		public Dictionary<string, string> Options; // maps the text of the option to the name of the scene to which the option takes you
+		public Dictionary<string, DialogOption> Options; // maps the text of the option to the name of the scene to which the option takes you
 		public string Goto;
 
 		public DialogueLine()
@@ -32,6 +33,17 @@ public class Scene
 			this.Options = null;
 			this.Goto = null;
 		}
+	}
+
+	[System.Serializable]
+	public struct DialogOption
+	{
+		public Scene InScene;
+		public DialogueLine AfterLine;
+		public string ChoiceName;
+		public string Text;
+		public string NextScene;
+		public string OptionName;
 	}
 
     private int currentDialogue;
@@ -75,20 +87,33 @@ public class Scene
 			string []parsedLine = sceneText[i].Split(':');
 			DialogueLine currLine = new DialogueLine();
 
-			if (parsedLine[0].Trim() == "ChoiceTrigger")
+			if (parsedLine[0].Trim().StartsWith("ChoiceTrigger"))
 			{
+				string choice = parsedLine[0].Substring(parsedLine[0].IndexOf(","));
+
 				currLine.Speaker = parsedLine[1];
 				currLine.Dialogue = parsedLine[2];
 
-				currLine.Options = new Dictionary<string, string>();
+				currLine.Options = new Dictionary<string, DialogOption>();
 
 				for (++i; i < sceneText.Count && sceneText[i].StartsWith("[Goto Scene "); i++)
 				{
+					DialogOption option = new DialogOption();
+					option.InScene = this;
+					option.AfterLine = currLine;
+					option.ChoiceName = choice;
+
 					string next = sceneText[i].Substring("[Goto Scene ".Length);
 					next = next.Substring(0, next.IndexOf(']'));
 
+					string[] nextParts = next.Split(',');
+					option.NextScene = nextParts[0];
+					option.OptionName = nextParts[1];
+
 					string choiceText = sceneText[i].Substring(sceneText[i].IndexOf(':') + 1);
-					currLine.Options.Add(choiceText, next);
+					option.Text = choiceText;
+
+					currLine.Options.Add(choiceText, option);
 				}
 
 				this.dialogueText.Add(currLine);
